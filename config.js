@@ -5,7 +5,8 @@
    只有想开「云同步」时才需要填下面两行：
 
    1. Supabase 后台 → SQL Editor → 粘贴 supabase/album-schema.sql → Run
-   2. Authentication → Providers → 打开 Anonymous Sign-ins
+   2. Authentication → Providers → Email：确认开启；并把 Confirm email 关掉
+      （关掉后注册即登录，不用收邮件；电脑和手机用同一个邮箱+密码即可互通）
    3. 把下面 URL / ANON 改成你的 Project URL 和 anon(publishable) key，
       并把 ALBUM_SYNC_ON 改成 true
 

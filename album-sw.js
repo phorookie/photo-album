@@ -1,6 +1,6 @@
 /* 欣赏相册集 · Service Worker
    作用：让 App 可安装、可离线打开。图片与笔记在 IndexedDB，不经过这里。 */
-const CACHE = 'album-shell-v3';
+const CACHE = 'album-shell-v4';
 const SHELL = [
   './album-manifest.webmanifest',
   './album-icon.svg',
@@ -35,6 +35,19 @@ self.addEventListener('fetch', e => {
   if (url.origin !== location.origin) return;
   if (!isOurs(url)) return;               // 不拦截同目录下的其他站点资源
 
+  // 页面导航走「网络优先」，保证更新后能拿到最新 HTML；离线时回退缓存
+  if (req.mode === 'navigate' || req.destination === 'document') {
+    e.respondWith(
+      fetch(req).then(res => {
+        const cp = res.clone();
+        caches.open(CACHE).then(c => c.put(req, cp));
+        return res;
+      }).catch(() => caches.match(req).then(hit => hit || caches.match('./album.html')))
+    );
+    return;
+  }
+
+  // 其他同源资源：缓存优先
   e.respondWith(
     caches.match(req).then(hit => {
       if (hit) return hit;
@@ -42,10 +55,7 @@ self.addEventListener('fetch', e => {
         const cp = res.clone();
         caches.open(CACHE).then(c => c.put(req, cp));
         return res;
-      }).catch(() => {
-        if (req.mode === 'navigate') return caches.match('./album.html');
-        return new Response('', { status: 504, statusText: 'offline' });
-      });
+      }).catch(() => new Response('', { status: 504, statusText: 'offline' }));
     })
   );
 });

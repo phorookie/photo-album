@@ -333,7 +333,7 @@
           <div class="msep" id="syncSep" style="display:none"></div>
           <button data-a="syncUp" id="syncUpBtn" style="display:none">☁️ 上传到云端</button>
           <button data-a="syncDown" id="syncDownBtn" style="display:none">☁️ 从云端恢复</button>
-          <button data-a="syncWho" id="syncWhoBtn" style="display:none">🔑 云端账号：未连接</button>
+          <button data-a="syncWho" id="syncWhoBtn" style="display:none">🔑 连接云端账号（邮箱）</button>
         </div>
       </div>
     </div>
@@ -1836,11 +1836,25 @@ function blobToDataURL(b){
 }
 function itemExt(it){return (it.dataUrl||'').indexOf('image/png')>=0?'png':'jpg';}
 function itemPath(it){return syncUser.id+'/'+it.id+'.'+itemExt(it);}
-async function syncSignIn(){
+const SYNC_EMAIL_KEY='album_sync_email';
+/* 邮箱 + 密码登录：电脑和手机用同一个邮箱，才能取回同一份数据 */
+async function syncLogin(){
   const c=sbClient();if(!c)throw new Error('未开启云同步');
-  const {data,error}=await c.auth.signInAnonymously();
-  if(error)throw error;
+  let email=prompt('云端账号邮箱（电脑和手机请填同一个）：',localStorage.getItem(SYNC_EMAIL_KEY)||'');
+  if(email===null)return null;
+  email=email.trim();if(!email)return null;
+  let pass=prompt('密码（至少 6 位。第一次用这个邮箱会自动注册）：','');
+  if(pass===null)return null;
+  pass=pass.trim();if(pass.length<6)throw new Error('密码至少 6 位');
+  let {data,error}=await c.auth.signInWithPassword({email,password:pass});
+  if(error){
+    const {data:d2,error:e2}=await c.auth.signUp({email,password:pass});
+    if(e2)throw e2;
+    if(!d2.session)throw new Error('已注册，但需要在 Supabase 关闭 Confirm email，或点邮箱确认链接后再试');
+    data=d2;
+  }
   syncUser=data.user;
+  localStorage.setItem(SYNC_EMAIL_KEY,email);
   return syncUser;
 }
 async function syncEnsureUser(){
@@ -1848,7 +1862,9 @@ async function syncEnsureUser(){
   const c=sbClient();if(!c)throw new Error('未开启云同步');
   const {data:{session}}=await c.auth.getSession();
   if(session&&session.user){syncUser=session.user;return syncUser;}
-  return syncSignIn();
+  const u=await syncLogin();
+  if(!u)throw new Error('请先连接云端账号');
+  return u;
 }
 async function syncUpload(){
   try{
@@ -1906,7 +1922,9 @@ function syncWho(){
   const c=sbClient();
   if(!c){toast('云同步未开启');return;}
   syncEnsureUser().then(u=>{
-    toast('云端账号已连接：'+u.id.slice(0,8)+'…（同一账号才能取回自己的数据）');
+    const who=u.email||u.id.slice(0,8)+'…';
+    document.getElementById('syncWhoBtn').textContent='🔑 云端账号：'+who;
+    toast('云端账号已连接：'+who+'（电脑和手机用同一邮箱即可互通）');
   }).catch(e=>toast('连接失败：'+(e.message||e)));
 }
 function syncInit(){
@@ -1916,7 +1934,7 @@ function syncInit(){
   sbClient().auth.getSession().then(({data:{session}})=>{
     if(session&&session.user){
       syncUser=session.user;
-      document.getElementById('syncWhoBtn').textContent='🔑 云端账号：'+session.user.id.slice(0,8)+'…';
+      document.getElementById('syncWhoBtn').textContent='🔑 云端账号：'+(session.user.email||session.user.id.slice(0,8)+'…');
     }
   }).catch(()=>{});
 }
