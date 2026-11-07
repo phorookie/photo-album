@@ -1,57 +1,103 @@
 # 欣赏相册集
 
-个人摄影欣赏相册：分层分类 + 构图分析图层 + 好/坏评论 + 标签检索。纯前端单页应用，数据全部存在浏览器本地（IndexedDB），可安装为 PWA、可离线使用。
+个人摄影欣赏相册：分层分类 + 构图分析图层 + 好/坏评论 + 结构化笔记。
+纯前端单页应用，**数据全部存在浏览器本地**，不需要账号、不需要服务器、不联网。
+
+## 给朋友：怎么打开用
+
+**方式 A · 在线链接（最省事，推荐）**
+
+打开 `https://phorookie.github.io/photo-album/album.html` 即可。手机也能用，
+Chrome / Safari 里选「添加到主屏幕」就能当 App 用。
+
+**方式 B · 拿到压缩包 / 离线使用（Windows）**
+
+1. 把**整个文件夹**解压出来（不要只拖出 `album.html` 一个文件）
+2. **双击 `start-album.bat`**（用 Windows 自带的 PowerShell，不用装任何软件）
+3. 浏览器会自动打开相册；用完关掉那个命令行窗口即可
+
+> **不要直接双击 `album.html`。** 浏览器禁止 `file://` 页面使用本地数据库（IndexedDB），
+> 双击会白屏或报错。必须走方式 A 的在线链接，或方式 B 的本地服务。
+
+**方式 C · 同一 WiFi，电脑临时开给手机（不用部署、不用联网）**
+
+1. 电脑和手机连同一个 WiFi
+2. 电脑上双击 **`start-album-phone.bat`**（带 `-phone` 的那个）
+3. 窗口会打印 `http://192.168.x.x:8080/album.html`，手机浏览器输入即可
+4. Windows 若弹防火墙提示，勾选「专用网络」并允许；用完关掉黑色窗口
+
+> 内网是 `http`，不是安全上下文，Service Worker 不会注册，**不能「添加到主屏幕」**，属正常现象；
+> 相册本身完全可用。数据存在手机浏览器里，和电脑上的相册不互通。
+
+**几个要知道的事**
+
+- 第一次打开是**空相册**，照片要自己导入；看不到别人的内容，别人也看不到你的。
+- 数据只存在你自己的浏览器里，**清浏览器数据 = 全部丢失**。请定期用「⋯ → ⬇ 备份整个相册」导出 json 存好。
+- 想把整理成果发给人看：用「⋯ → 📄 导出笔记（含图 · HTML）」得到自包含网页，或「📇 学习卡」导出 PNG；
+  想让人拿到可继续编辑的完整数据，用「⬇ 备份」的 json 让对方「⬆ 从备份恢复」。
 
 ## 功能
 
-- 分层分类（商业摄影 / 爱好者摄影…，分组只汇总、不可直接存图）
+- 分层分类（商业摄影 / 爱好者摄影…，分组只汇总、不可直接存图）；待整理锁定、子分类自动归档
 - 构图分析图层：手绘 / 直线 / 箭头 / 矩形 + 参考线（三分 / 黄金分割），线条可选中拖动编辑、可导出分析图
-- 好 / 坏 评论，以及**结构化笔记**（色调 / 光线 / 情绪 / 构图 / 可借鉴点 / 雷区 六个维度，随时补写）
-- 标签（12 个预设 + 自定义）、全库搜索与筛选
-- **学习卡导出**：把照片 + 构图线 + 结构化笔记 + 好/坏评论 合成一张 PNG，便于保存与分享
+- 好 / 坏 评论，以及**结构化笔记**（色调 / 光线 / 情绪 / 构图 / 可借鉴点 / 雷区 六个维度）
+- 标签（12 个预设 + 自定义）、全库搜索与筛选、批量整理
+- **学习卡导出**：照片 + 构图线 + 六维笔记 + 好/坏评论 合成一张 PNG
 - 双图对比（联动 / 独立缩放、原尺寸、三分线）、查看器内缩放与平移
-- 笔记汇总导出（HTML / Markdown）、整库备份与恢复
+- 笔记汇总导出（HTML / Markdown）、整库备份与恢复、拖拽 / Ctrl+V 导入
 - PWA 可安装、离线可用
 
 ## 文件结构
 
 ```
-album.html                 相册主应用（单文件，全部功能都在里面）
+album.html                 相册主应用（全部功能都在这个文件里）
+start-album.bat            Windows 一键启动（双击这个）
+start-album-phone.bat      手机同 WiFi 访问（绑定所有网卡，打印局域网地址）
+start-album.ps1            启动脚本本体（本地 HTTP 服务，被两个 bat 调用）
+README-FIRST.txt           给不熟电脑的朋友的一句话说明（中文）
+config.js                  云同步开关（已停用，保持 false 即可）
 album-manifest.webmanifest PWA 清单（安装到主屏幕用）
 album-sw.js                Service Worker（离线可用）
-album-icon.svg             图标源文件
-album-icon-192.png         PWA 图标 192
-album-icon-512.png         PWA 图标 512
+album-icon.svg / *.png     图标
 make_icons.py              图标生成脚本（改图标才用得上）
-config.js                  Supabase 配置 + 云同步开关（不开云同步可不管）
-supabase/album-schema.sql  云同步所需的表结构与权限（不开云同步可不管）
-.github/workflows/         GitHub Pages 自动部署
+make_share_zip.py          重新生成分享包 ZIP（改完代码后运行）
+supabase/album-schema.sql  云同步表结构（已停用，可忽略）
+.github/workflows/         GitHub Pages 自动部署配置
 ```
 
-## 本地预览
+## 重新打分享包
 
-需要通过 http 打开（`file://` 下 IndexedDB 会被浏览器拦）：
+改完代码后，在本目录运行 `python make_share_zip.py`，
+会在上一级目录生成 `摄影欣赏相册-分享包-<日期>.zip`，直接发给朋友即可。
+包内文件名全为 ASCII、路径用正斜杠，Windows / macOS / 手机解压都不会乱码。
 
-```bash
-python -m http.server 8080
-# 打开 http://localhost:8080/album.html
-```
+## 部署（GitHub Pages）
 
-## 部署
-
-推到 `main` 分支即自动部署到 GitHub Pages（Actions 里看进度），地址为
+推到 `main` 分支会触发 `.github/workflows/deploy.yml` 自动部署，地址为
 `https://<用户名>.github.io/<仓库名>/album.html`。
+
+**首次部署必须先做一步**：仓库 **Settings → Pages → Build and deployment → Source 选 `GitHub Actions`**。
+不先选，workflow 里的 `Set up Pages` 会失败，链接会一直 404。
+之后去 **Actions → Deploy to GitHub Pages → Run workflow** 手动跑一次，等绿勾即可。
 
 手机安装：Android Chrome 菜单 →「安装应用 / 添加到主屏幕」；iOS Safari → 分享按钮 →「添加到主屏幕」。
 
-## 云同步（可选，默认关闭）
+## 手机端适配（已在代码里做好）
 
-1. Supabase → SQL Editor → 执行 `supabase/album-schema.sql`
-2. Authentication → Providers → 打开 **Anonymous Sign-ins**
-3. `config.js` 里填 URL / ANON，并把 `ALBUM_SYNC_ON` 改为 `true`
+- 侧栏自动变成抽屉、查看器改为「图在上 / 笔记面板在下」、双图对比改上下排列（`@media` 断点 860 / 760px）
+- 全部交互使用 Pointer Events + `touch-action:none`：单指画构图线、单指拖动平移、**双指捏合缩放**、双图对比分侧缩放都支持
+- 触屏设备（`@media (hover:none)`）上，分类树的 ＋ / ✎ / 🗑 和照片的删除按钮**常显**，不会因没有 hover 而点不到
+- 导出走 `navigator.share` 系统分享；导入用 `<input type="file" accept="image/*" multiple>`，可调相机 / 相册多选
+- 已知 iOS 限制：无痕模式下本地数据库可能不可用；「导入文件夹」在手机上不支持（用多选照片代替）；
+  PWA 长期不用可能被系统清理本地数据，请定期备份
 
-注意：匿名账号身份存在浏览器里，清缓存 / 换浏览器会变成新身份，云端数据失联。本地「⬇ 备份」仍是最终保险。
+## 云同步：未启用
+
+本项目已放弃云同步。`config.js` 里 `ALBUM_SYNC_ON = false`，`album.html` 也不加载任何外部 SDK，
+页面零外部请求。跨设备传数据请用「⬇ 备份 / ⬆ 从备份恢复」或导出的笔记 HTML。
+恢复云同步的做法写在 `config.js` 的注释里。
 
 ## 数据安全
 
-照片、构图线条、评论、分类树全部在浏览器本地。**清浏览器数据 = 全部丢失**，请定期用相册内「⋯ → 备份」导出 json 并存到云盘。
+照片、构图线条、评论、分类树、笔记全部在浏览器本地。**清浏览器数据 = 全部丢失**，
+请定期用相册内「⋯ → 备份」导出 json 并存到云盘。

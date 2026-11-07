@@ -14,7 +14,6 @@
 <meta name="apple-mobile-web-app-title" content="欣赏相册">
 <link rel="icon" type="image/svg+xml" href="./album-icon.svg">
 <link rel="apple-touch-icon" href="./album-icon-192.png">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config.js"></script>
 
 <style>
@@ -285,6 +284,10 @@
     .scrim.on{display:block;}
     .grid{grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;}
     .stage img{max-height:52vh;}
+    .v-top{flex-wrap:nowrap;overflow-x:auto;padding:8px 10px;scrollbar-width:none;}
+    .v-top::-webkit-scrollbar{display:none;}
+    .v-top button{flex:0 0 auto;}
+    .v-top .vt{flex:1 1 60px;min-width:60px;}
     .v-body{flex-direction:column;}
     .v-side{width:100%;flex:0 0 auto;max-height:46vh;border-top:1px solid var(--line);}
     .crumbrow{padding:8px 12px 4px;}
@@ -293,6 +296,16 @@
     .banner{margin:4px 12px 0;}
   }
   @media (min-width:861px){ #menuBtn{display:none;} }
+
+  /* ---- 触屏设备：没有 hover，靠 :hover 才出现的操作按钮必须常显 ----
+     否则手机上无法新建子分类 / 重命名 / 删除分类，也无法单张删照片 */
+  @media (hover:none){
+    .row .acts{display:flex;gap:0;}
+    .acts button{width:28px;height:28px;font-size:14px;}
+    .card .del{display:flex;width:30px;height:30px;top:6px;right:6px;font-size:15px;}
+    .mini{padding-top:9px;padding-bottom:9px;}
+    .v-top button{padding:9px 11px;}
+  }
 </style>
 </head>
 <body>
