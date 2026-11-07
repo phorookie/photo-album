@@ -7,7 +7,8 @@
 
 **方式 A · 在线链接（最省事，推荐）**
 
-打开 `https://phorookie.github.io/photo-album/album.html` 即可。手机也能用，
+打开 `https://phorookie.github.io/photo-album/` 即可（会自动跳到 `album.html`），
+直接发 `https://phorookie.github.io/photo-album/album.html` 也一样。手机也能用，
 Chrome / Safari 里选「添加到主屏幕」就能当 App 用。
 
 **方式 B · 拿到压缩包 / 离线使用（Windows）**
@@ -51,6 +52,7 @@ Chrome / Safari 里选「添加到主屏幕」就能当 App 用。
 
 ```
 album.html                 相册主应用（全部功能都在这个文件里）
+index.html                 Pages 根路径跳转页（发短链接时用，不进分享包）
 start-album.bat            Windows 一键启动（双击这个）
 start-album-phone.bat      手机同 WiFi 访问（绑定所有网卡，打印局域网地址）
 start-album.ps1            启动脚本本体（本地 HTTP 服务，被两个 bat 调用）
